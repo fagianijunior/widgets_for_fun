@@ -29,7 +29,19 @@ class NotificationsWindow(Gtk.Window):
 
         self.pause_button = button_box.get_children()[1]
 
+        # Adicionar campo de filtro
+        filter_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.box.pack_start(filter_box, False, False, 0)
+
+        filter_label = Gtk.Label(label="Filtrar:")
+        filter_box.pack_start(filter_label, False, False, 0)
+
+        self.filter_entry = Gtk.Entry()
+        self.filter_entry.connect("changed", self.on_filter_changed)
+        filter_box.pack_start(self.filter_entry, True, True, 0)
+
         self.notifications_list = Gtk.ListBox()
+        self.notifications_list.set_filter_func(self.filter_notifications)
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scrolled.add(self.notifications_list)
@@ -52,6 +64,7 @@ class NotificationsWindow(Gtk.Window):
             row = self.create_notification_row(notification)
             self.notifications_list.add(row)
 
+        self.notifications_list.invalidate_filter()
         self.notifications_list.show_all()
         return True
 
@@ -74,3 +87,13 @@ class NotificationsWindow(Gtk.Window):
     def remove_notification(self, widget, id_notification):
         subprocess.run(["dunstctl", "history-rm", str(id_notification)])
         self.refresh_notifications()
+
+    def on_filter_changed(self, entry):
+        self.notifications_list.invalidate_filter()
+
+    def filter_notifications(self, row):
+        text = self.filter_entry.get_text().lower()
+        if not text:
+            return True
+        label = row.get_children()[0].get_children()[0]
+        return text in label.get_text().lower()
