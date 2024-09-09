@@ -4,11 +4,17 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 from NotificationsWindow import NotificationsWindow
+from CpuWindow import CpuWindow
 
 def main():
-    win = NotificationsWindow()
-    win.connect("destroy", Gtk.main_quit)
-    win.show_all()
+    notifications_win = NotificationsWindow()
+    notifications_win.connect("destroy", Gtk.main_quit)
+    notifications_win.show_all()
+
+    cpu_win = CpuWindow()
+    cpu_win.connect("destroy", Gtk.main_quit)
+    cpu_win.show_all()
+
     Gtk.main()
 
 if __name__ == "__main__":

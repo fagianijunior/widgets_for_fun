@@ -4,17 +4,62 @@ from gi.repository import Gtk, Gdk, GLib
 import subprocess
 import json
 from Utils import Utils
+import os
 
 class NotificationsWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="widget - Central de Notificações")
         
-        self.set_default_size(400, Utils.get_screen_size(Gdk.Display.get_default())[1] - 4)
+        self.config_file = os.path.expanduser("~/.config/notifications_widget_config.json")
+        self.load_config()
+        
+        self.set_default_size(self.width, self.height)
+        if self.x is not None and self.y is not None:
+            self.move(self.x, self.y)
         
         self.setup_ui()
         self.refresh_notifications()
         GLib.timeout_add_seconds(60, self.refresh_notifications)
         
+        self.connect("configure-event", self.on_configure_event)
+        self.connect("delete-event", self.on_delete_event)
+        
+    def load_config(self):
+        default_config = {
+            "width": 400,
+            "height": Utils.get_screen_size(Gdk.Display.get_default())[1] - 4,
+            "x": None,
+            "y": None
+        }
+        if os.path.exists(self.config_file):
+            with open(self.config_file, "r") as f:
+                config = json.load(f)
+        else:
+            config = default_config
+        
+        self.width = config.get("width", default_config["width"])
+        self.height = config.get("height", default_config["height"])
+        self.x = config.get("x")
+        self.y = config.get("y")
+        
+    def save_config(self):
+        config = {
+            "width": self.get_allocated_width(),
+            "height": self.get_allocated_height(),
+            "x": self.get_position()[0],
+            "y": self.get_position()[1]
+        }
+        with open(self.config_file, "w") as f:
+            json.dump(config, f)
+        
+    def on_configure_event(self, widget, event):
+        self.save_config()
+        return False
+        
+    def on_delete_event(self, widget, event):
+        self.save_config()
+        return False
+
     def setup_ui(self):
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.add(self.box)
