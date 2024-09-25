@@ -3,14 +3,12 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib
 import subprocess
 import json
-from Utils import Utils
-import os
+from ConfigManager import ConfigManager
 
 class NotificationsWindow(Gtk.Window):
     def __init__(self):
-        super().__init__(title="widget - Central de Notificações")
+        super().__init__(title="Widget - Central de Notificações")
         
-        self.config_file = os.path.expanduser("~/.config/notifications_widget_config.json")
         self.load_config()
         
         self.set_default_size(self.width, self.height)
@@ -25,17 +23,13 @@ class NotificationsWindow(Gtk.Window):
         self.connect("delete-event", self.on_delete_event)
         
     def load_config(self):
+        config = ConfigManager.load_config("notifications")
         default_config = {
             "width": 400,
-            "height": Utils.get_screen_size(Gdk.Display.get_default())[1] - 4,
+            "height": 500,
             "x": None,
             "y": None
         }
-        if os.path.exists(self.config_file):
-            with open(self.config_file, "r") as f:
-                config = json.load(f)
-        else:
-            config = default_config
         
         self.width = config.get("width", default_config["width"])
         self.height = config.get("height", default_config["height"])
@@ -49,8 +43,7 @@ class NotificationsWindow(Gtk.Window):
             "x": self.get_position()[0],
             "y": self.get_position()[1]
         }
-        with open(self.config_file, "w") as f:
-            json.dump(config, f)
+        ConfigManager.save_config("notifications", config)
         
     def on_configure_event(self, widget, event):
         self.save_config()
